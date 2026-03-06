@@ -1,34 +1,25 @@
-const telegramBot = require('node-telegram-bot-api');
+const telegramBot=require('node-telegram-bot-api');
 const dotenv=require('dotenv');
-dotenv.config();
+const axios=require('axios');
+dotenv.config(); // parse all the contents of the.env file and add them to process.env
 
 
-console.log(process.env.Telegram_Token);
-
-const bot=new telegramBot(process.env.Telegram_Token,{polling:true});
+const bot=new telegramBot(process.env.TELEGRAM_TOKEN,{polling:true});
 
 bot.on('message',(msg)=>{
 
     const chatId=msg.chat.id;
-    bot.sendMessage(chatId,"Hello! I am your Joke Bot. Send /joke to get a random joke.");
+    bot.sendMessage(chatId,"Hello, I am a joke bot. I can tell you fhaaaaaaaaa jokes. Just send me the command /joke and I will tell you a joke.");
 });
 
-bot .onText(/\/joke/,async (msg)=>{
-    const chatId=msg.chat.id;
-    try{
-        const joke=await getJoke();
-        bot.sendMessage (chatId,joke);
-    }   catch (error){  
-        bot.sendMessage(chatId,"Sorry, I couldn't fetch a joke at the moment.");
-    }
-});
+bot.onText(/\/joke/, async(msg) => { // for network interaction use async and await with axios
+    const respone=await axios.get('https://official-joke-api.appspot.com/random_joke')
 
-async function getJoke(){
-    const axios=require('axios');
-    const response=await axios.get('https://official-joke-api.appspot.com/random_joke');
-    const jokeData=response.data;
-    return `${jokeData.setup}\n${jokeData.punchline}`;
-}
+    const setup=respone.data.setup
+    const punchline=respone.data.punchline
+
+    bot.sendMessage(msg.chat.id, `${setup}\n${punchline}`)
+})
 bot.onText(/^\//, async (msg) => {
     const chatId = msg.chat.id;
     const command = msg.text.split(' ')[0];
@@ -38,10 +29,10 @@ bot.onText(/^\//, async (msg) => {
         return;
     }
     if (command === '/start') {
-        bot.sendMessage(chatId, "👋 Welcome to the Joke Bot! Send /joke to get a random joke.");
+        bot.sendMessage(chatId, "hello");
         return;
     }
     
     // Handle unknown commands
-    bot.sendMessage(chatId, "❌ Unknown command! Available commands: /joke, /start");
+    bot.sendMessage(chatId, " Unknown command! Available commands: /joke, /start");
 });
